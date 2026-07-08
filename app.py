@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
-from datetime import datetime
+from datetime import datetime, timezone   # <-- Added timezone import
 import json
+import os
 
 # FIX: Added instance_path to prevent crash on Python 3.14
 app = Flask(__name__, instance_path='/tmp/instance')
@@ -30,7 +31,7 @@ def receive_cookie():
 
     # Build a structured log entry
     log_entry = {
-        "timestamp": datetime.now(datetime.UTC).isoformat(),,
+        "timestamp": datetime.now(timezone.UTC).isoformat(),   # <-- FIXED: correct syntax
         "cookies": cookies,
         "get_params": get_params,
         "post_data": post_data,
@@ -79,5 +80,6 @@ def after_request(response):
     return response
 
 if __name__ == '__main__':
-    # Render requires the server to listen on 0.0.0.0
-    app.run(host='0.0.0.0', port=5000)
+    # Get the port from the environment variable, default to 5000 if not set
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
