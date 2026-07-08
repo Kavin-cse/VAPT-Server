@@ -30,7 +30,7 @@ def receive_cookie():
 
     # Build a structured log entry
     log_entry = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(datetime.UTC).isoformat(),,
         "cookies": cookies,
         "get_params": get_params,
         "post_data": post_data,
